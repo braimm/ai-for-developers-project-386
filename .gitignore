@@ -20,6 +20,11 @@ frontend/*.tsbuildinfo
 typespec/node_modules/
 typespec/tsp-output/
 
+# Tests
+tests/node_modules/
+tests/package-lock.json
+tests/test-results/
+
 # Local project notes and prompts
 .prompt/
 plan.txt

@@ -1,0 +1,11 @@
+{
+  "name": "calendar-booking-e2e",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}

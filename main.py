@@ -1,9 +1,12 @@
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from domain import (
     Booking,
@@ -19,20 +22,27 @@ from domain import (
 )
 from storage import Storage, get_storage
 
-
 app = FastAPI(title="Calendar Booking API")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+if os.getenv("APP_ENV", "production").lower() == "dev":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 storage: Storage = get_storage()
+
+FRONTEND_DIST = Path(__file__).parent / "frontend" / "dist"
+HAS_FRONTEND = FRONTEND_DIST.is_dir()
+
+if HAS_FRONTEND:
+    app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIST / "assets")), name="assets")
 
 
 def error_response(status_code: int, code: str, message: str) -> JSONResponse:
@@ -76,11 +86,6 @@ def build_slots_for_event_type(event_type: EventType) -> list[Slot]:
             )
 
     return slots
-
-
-@app.get("/")
-def read_root() -> dict[str, str]:
-    return {"message": "Hello from FastAPI!"}
 
 
 @app.get("/health")
@@ -177,3 +182,15 @@ def create_booking(body: CreateBookingRequest):
         createdAt=utc_now(),
     )
     return storage.create_booking(booking)
+
+
+if HAS_FRONTEND:
+
+    @app.get("/{full_path:path}")
+    def serve_frontend():
+        return FileResponse(str(FRONTEND_DIST / "index.html"), media_type="text/html")
+else:
+
+    @app.get("/")
+    def read_root() -> dict[str, str]:
+        return {"message": "Hello from FastAPI!"}
