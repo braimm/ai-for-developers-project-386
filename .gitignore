@@ -8,6 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
+calendar.db
+*.db
 
 # Frontend
 frontend/node_modules/

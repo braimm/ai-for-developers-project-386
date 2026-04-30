@@ -1,64 +1,23 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 
-
-class OwnerProfile(BaseModel):
-    id: str
-    displayName: str
-
-
-class PublicOwnerProfile(BaseModel):
-    displayName: str
-    role: str
-
-
-class EventType(BaseModel):
-    id: str
-    title: str
-    description: str | None = None
-    durationMinutes: int
-
-
-class Slot(BaseModel):
-    eventTypeId: str
-    startsAt: datetime
-    endsAt: datetime
-    available: bool
-
-
-class Booking(BaseModel):
-    id: str
-    eventTypeId: str
-    startsAt: datetime
-    endsAt: datetime
-    guestName: str
-    guestEmail: str
-    notes: str | None = None
-    createdAt: datetime
-    status: str = "confirmed"
-
-
-class CreateEventTypeRequest(BaseModel):
-    id: str
-    title: str
-    description: str | None = None
-    durationMinutes: int
-
-
-class CreateBookingRequest(BaseModel):
-    eventTypeId: str
-    startsAt: datetime
-    guestName: str
-    guestEmail: str
-    notes: str | None = None
-
-
-class EventTypeDetails(EventType):
-    owner: PublicOwnerProfile
+from domain import (
+    Booking,
+    CreateBookingRequest,
+    CreateEventTypeRequest,
+    EventType,
+    EventTypeDetails,
+    OwnerProfile,
+    PUBLIC_OWNER_PROFILE,
+    OWNER_PROFILE,
+    PublicOwnerProfile,
+    Slot,
+)
+from storage import Storage, get_storage
 
 
 app = FastAPI(title="Calendar Booking API")
@@ -73,24 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-OWNER_PROFILE = OwnerProfile(id="owner", displayName="Tota")
-PUBLIC_OWNER_PROFILE = PublicOwnerProfile(displayName=OWNER_PROFILE.displayName, role="Host")
-
-event_types: dict[str, EventType] = {
-    "15-min-call": EventType(
-        id="15-min-call",
-        title="Встреча 15 минут",
-        description="Короткий тип события для быстрого слота.",
-        durationMinutes=15,
-    ),
-    "30-min-call": EventType(
-        id="30-min-call",
-        title="Встреча 30 минут",
-        description="Базовый тип события для бронирования.",
-        durationMinutes=30,
-    ),
-}
-bookings: list[Booking] = []
+storage: Storage = get_storage()
 
 
 def error_response(status_code: int, code: str, message: str) -> JSONResponse:
@@ -106,14 +48,6 @@ def slot_window_start() -> datetime:
     return now.replace(hour=9, minute=0, second=0, microsecond=0)
 
 
-def get_event_type_or_none(event_type_id: str) -> EventType | None:
-    return event_types.get(event_type_id)
-
-
-def list_event_types_sorted() -> list[EventType]:
-    return sorted(event_types.values(), key=lambda item: item.id)
-
-
 def overlaps(starts_at: datetime, ends_at: datetime, booking: Booking) -> bool:
     return starts_at < booking.endsAt and booking.startsAt < ends_at
 
@@ -122,6 +56,7 @@ def build_slots_for_event_type(event_type: EventType) -> list[Slot]:
     slots: list[Slot] = []
     base_start = slot_window_start()
     now = utc_now()
+    bookings = storage.list_all_bookings()
 
     for day_offset in range(14):
         for slot_index in range(6):
@@ -143,10 +78,6 @@ def build_slots_for_event_type(event_type: EventType) -> list[Slot]:
     return slots
 
 
-def booking_sort_key(booking: Booking) -> tuple[datetime, str]:
-    return booking.startsAt, booking.id
-
-
 @app.get("/")
 def read_root() -> dict[str, str]:
     return {"message": "Hello from FastAPI!"}
@@ -164,7 +95,7 @@ def get_owner_profile() -> OwnerProfile:
 
 @app.get("/owner/event-types")
 def list_owner_event_types() -> list[EventType]:
-    return list_event_types_sorted()
+    return storage.list_event_types()
 
 
 @app.post("/owner/event-types", status_code=201)
@@ -175,18 +106,15 @@ def create_event_type(body: CreateEventTypeRequest):
     if body.durationMinutes <= 0:
         return error_response(400, "validation_error", "Event type duration must be positive")
 
-    if body.id in event_types:
+    if storage.get_event_type(body.id) is not None:
         return error_response(400, "validation_error", "Event type id must be unique")
 
-    event_type = EventType(**body.model_dump())
-    event_types[event_type.id] = event_type
-    return event_type
+    return storage.create_event_type(EventType(**body.model_dump()))
 
 
 @app.get("/owner/bookings")
 def list_upcoming_bookings(from_: datetime | None = Query(default=None, alias="from")) -> list[Booking]:
-    threshold = from_ or utc_now()
-    return sorted((booking for booking in bookings if booking.startsAt >= threshold), key=booking_sort_key)
+    return storage.list_upcoming_bookings(from_ or utc_now())
 
 
 @app.get("/public/profile")
@@ -196,12 +124,12 @@ def get_public_profile() -> PublicOwnerProfile:
 
 @app.get("/public/event-types")
 def list_public_event_types() -> list[EventType]:
-    return list_event_types_sorted()
+    return storage.list_event_types()
 
 
 @app.get("/public/event-types/{event_type_id}")
 def get_public_event_type(event_type_id: str):
-    event_type = get_event_type_or_none(event_type_id)
+    event_type = storage.get_event_type(event_type_id)
 
     if event_type is None:
         return error_response(404, "event_type_not_found", "Event type not found")
@@ -211,7 +139,7 @@ def get_public_event_type(event_type_id: str):
 
 @app.get("/public/event-types/{event_type_id}/slots")
 def list_slots(event_type_id: str):
-    event_type = get_event_type_or_none(event_type_id)
+    event_type = storage.get_event_type(event_type_id)
 
     if event_type is None:
         return error_response(404, "event_type_not_found", "Event type not found")
@@ -221,7 +149,7 @@ def list_slots(event_type_id: str):
 
 @app.post("/public/bookings", status_code=201)
 def create_booking(body: CreateBookingRequest):
-    event_type = get_event_type_or_none(body.eventTypeId)
+    event_type = storage.get_event_type(body.eventTypeId)
 
     if event_type is None:
         return error_response(404, "event_type_not_found", "Event type not found")
@@ -239,7 +167,7 @@ def create_booking(body: CreateBookingRequest):
         return error_response(409, "slot_already_booked", "Selected slot is already booked")
 
     booking = Booking(
-        id=f"booking-{len(bookings) + 1}",
+        id=f"booking-{uuid.uuid4().hex}",
         eventTypeId=body.eventTypeId,
         startsAt=matching_slot.startsAt,
         endsAt=matching_slot.endsAt,
@@ -248,6 +176,4 @@ def create_booking(body: CreateBookingRequest):
         notes=body.notes,
         createdAt=utc_now(),
     )
-    bookings.append(booking)
-
-    return booking
+    return storage.create_booking(booking)

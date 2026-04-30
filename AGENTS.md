@@ -18,10 +18,11 @@
 - Python `3.12` из `.python-version`.
 - Frontend `Node.js` зафиксирован в `.nvmrc`.
 - Зависимости управляются через `uv` (`pyproject.toml`, `uv.lock`).
-- Backend: `FastAPI` + `uvicorn`
+- Backend: `FastAPI` + `uvicorn` + `SQLite` через `SQLAlchemy`
 - Frontend: `Vite` + `TypeScript` + `React` + `Mantine` в `frontend/`
 - Основное приложение и текущие маршруты находятся в `main.py`.
 - ASGI entrypoint: `main:app`.
+- Хранилище по умолчанию: `SQLite`; для явного dev/debug режима можно переключиться на `APP_STORAGE=memory`.
 
 ## Команды
 - Предпочитай `make`-цели для стандартных локальных операций.

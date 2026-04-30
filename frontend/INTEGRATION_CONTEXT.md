@@ -9,6 +9,8 @@
 
 ## Backend State
 - `main.py` now implements the in-memory API described by `typespec/main.tsp`.
+- `main.py` now implements the API described by `typespec/main.tsp` through a storage abstraction.
+- Default backend storage is SQLite; `APP_STORAGE=memory` keeps the old ephemeral mode for dev/debug runs.
 - Implemented endpoints:
   - `GET /owner/profile`
   - `GET /owner/event-types`
@@ -22,7 +24,8 @@
 - Business rules already implemented:
   - 14-day booking window
   - slot conflict detection across all event types
-  - in-memory data storage only
+  - SQLite persistence by default
+  - optional in-memory storage mode
   - CORS for `localhost:5173`
 
 ## Key Frontend Files
@@ -60,10 +63,10 @@
 ## Known Integration Risks
 - Frontend mocks currently use fixed 2026 demo dates; backend generates slots from the current date.
 - Confirm flow relies on route state, so direct reload on confirm/success pages falls back to a warning/redirect.
-- Owner/admin UI is still not implemented.
+- Owner/admin bookings page is implemented.
 
 ## If Real Backend Is Not Ready
 - Re-enable mock mode by setting `VITE_USE_MOCKS=true` explicitly.
 
 ## Next Natural Backend Step After Integration
-- Replace in-memory storage with SQLite while preserving the current API contract and booking conflict rule.
+- Stabilize the SQLite-backed backend and decide when to introduce schema migrations and persistent dev data cleanup flows.
