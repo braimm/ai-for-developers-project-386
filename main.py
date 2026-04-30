@@ -121,11 +121,16 @@ def overlaps(starts_at: datetime, ends_at: datetime, booking: Booking) -> bool:
 def build_slots_for_event_type(event_type: EventType) -> list[Slot]:
     slots: list[Slot] = []
     base_start = slot_window_start()
+    now = utc_now()
 
     for day_offset in range(14):
         for slot_index in range(6):
             starts_at = base_start + timedelta(days=day_offset, minutes=slot_index * event_type.durationMinutes)
             ends_at = starts_at + timedelta(minutes=event_type.durationMinutes)
+
+            if starts_at < now:
+                continue
+
             slots.append(
                 Slot(
                     eventTypeId=event_type.id,

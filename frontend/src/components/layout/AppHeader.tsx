@@ -18,7 +18,7 @@ export function AppHeader() {
             <Text component={NavLink} to="/book" td="none" c="dimmed" fw={500}>
               Записаться
             </Text>
-            <Text component={NavLink} to="/admin" td="none" c="dimmed" fw={500}>
+            <Text component={NavLink} to="/admin/bookings" td="none" c="dimmed" fw={500}>
               Админка
             </Text>
           </Group>

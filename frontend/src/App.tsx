@@ -6,6 +6,7 @@ import { BookingConfirmPage } from './pages/BookingConfirmPage';
 import { BookingSuccessPage } from './pages/BookingSuccessPage';
 import { EventTypePage } from './pages/EventTypePage';
 import { HomePage } from './pages/HomePage';
+import { OwnerBookingsPage } from './pages/OwnerBookingsPage';
 import { PublicCatalogPage } from './pages/PublicCatalogPage';
 
 export function App() {
@@ -22,6 +23,7 @@ export function App() {
             <Route path="/book/:eventTypeId" element={<EventTypePage />} />
             <Route path="/book/:eventTypeId/confirm" element={<BookingConfirmPage />} />
             <Route path="/bookings/success" element={<BookingSuccessPage />} />
+            <Route path="/admin/bookings" element={<OwnerBookingsPage />} />
             <Route path="/admin" element={<AdminPlaceholderPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

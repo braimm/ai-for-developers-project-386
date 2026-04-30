@@ -3,12 +3,19 @@ export type PublicOwnerProfile = {
   role: 'Host';
 };
 
+export type OwnerProfile = {
+  id: string;
+  displayName: string;
+};
+
 export type PublicEventType = {
   id: string;
   title: string;
   description?: string;
   durationMinutes: number;
 };
+
+export type EventType = PublicEventType;
 
 export type EventTypeDetails = PublicEventType & {
   owner: PublicOwnerProfile;
