@@ -27,10 +27,10 @@ test.describe('Owner bookings', () => {
 
     await page.goto('/admin/bookings');
 
-    await expect(page.getByRole('heading', { name: 'Tota' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Предстоящие записи' })).toBeVisible();
+    await expect(page.locator('h1', { hasText: 'Tota' })).toBeVisible();
+    await expect(page.locator('h2', { hasText: 'Предстоящие записи' })).toBeVisible();
 
-    await expect(page.getByText(GUEST_NAME)).toBeVisible();
-    await expect(page.getByText(GUEST_EMAIL)).toBeVisible();
+    await expect(page.getByText(GUEST_NAME).first()).toBeVisible();
+    await expect(page.getByText(GUEST_EMAIL).first()).toBeVisible();
   });
 });

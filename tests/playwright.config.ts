@@ -20,13 +20,13 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'APP_STORAGE=memory make run',
+      command: 'APP_ENV=dev APP_STORAGE=memory make run',
       url: 'http://localhost:8000/health',
       reuseExistingServer: !process.env.CI,
       cwd: '..',
     },
     {
-      command: 'make frontend-dev',
+      command: 'npm run dev',
       url: 'http://localhost:5173',
       reuseExistingServer: !process.env.CI,
       cwd: '../frontend',

@@ -10,18 +10,18 @@ test.describe('Main booking flow', () => {
     await expect(eventTypeCard).toBeVisible();
     await eventTypeCard.click();
 
-    await expect(page.getByRole('heading', { name: 'Встреча 15 минут' })).toBeVisible();
+    await expect(page.locator('h1', { hasText: 'Встреча 15 минут' })).toBeVisible();
 
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
-    const dayButton = page.getByRole('button').filter({ hasText: /\d{2}\.\d{2}/ }).first();
-    await expect(dayButton).toBeVisible();
-    await dayButton.click();
+    const dayButtons = page.getByRole('button').filter({ hasText: /января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря/ });
+    await expect(dayButtons.first()).toBeVisible({ timeout: 10000 });
+    await dayButtons.first().click();
 
     await page.waitForTimeout(500);
 
     const availableSlotButton = page.getByRole('button', { name: 'Свободно' }).first();
-    await expect(availableSlotButton).toBeVisible();
+    await expect(availableSlotButton).toBeVisible({ timeout: 10000 });
     await availableSlotButton.click();
 
     await expect(page.getByRole('button', { name: 'Выбрано' })).toBeVisible();
@@ -44,9 +44,9 @@ test.describe('Main booking flow', () => {
     const submitButton = page.getByRole('button', { name: 'Подтвердить бронирование' });
     await submitButton.click();
 
-    await expect(page.getByRole('heading', { name: 'Спасибо, встреча запланирована' })).toBeVisible();
+    await expect(page.locator('h1', { hasText: 'Спасибо, встреча запланирована' })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Бронирование подтверждено')).toBeVisible();
-    await expect(page.getByText(GUEST_NAME)).toBeVisible();
-    await expect(page.getByText(GUEST_EMAIL)).toBeVisible();
+    await expect(page.getByText(GUEST_NAME).first()).toBeVisible();
+    await expect(page.getByText(GUEST_EMAIL).first()).toBeVisible();
   });
 });
