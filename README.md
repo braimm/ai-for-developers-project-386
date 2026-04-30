@@ -1,2 +1,5 @@
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/braimm/ai-for-developers-project-386/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/braimm/ai-for-developers-project-386/actions)
+
+### Deployed application:
+https://ai-for-developers-project-386-rsbb.onrender.com
