@@ -1,6 +1,9 @@
+output-dir: "{project-root}"
+
 emit:
   - "@typespec/openapi3"
 
 options:
   "@typespec/openapi3":
+    emitter-output-dir: "{output-dir}"
     output-file: "calendar-booking.openapi.yaml"

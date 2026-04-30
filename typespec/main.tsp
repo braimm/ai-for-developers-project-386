@@ -5,9 +5,8 @@ import "@typespec/openapi3";
 using TypeSpec.Http;
 using TypeSpec.Rest;
 
-@service({
+@service(#{
   title: "Calendar Booking API",
-  version: "0.1.0",
 })
 @server("http://localhost:8000", "Local development")
 namespace CalendarBooking;
@@ -15,6 +14,11 @@ namespace CalendarBooking;
 model OwnerProfile {
   id: "owner";
   displayName: string;
+}
+
+model PublicOwnerProfile {
+  displayName: string;
+  role: "Host";
 }
 
 model EventType {
@@ -51,6 +55,7 @@ model Booking {
 }
 
 model CreateEventTypeRequest {
+  id: string;
   title: string;
   description?: string;
   durationMinutes: int32;
@@ -64,9 +69,8 @@ model CreateBookingRequest {
   notes?: string;
 }
 
-model ListSlotsQuery {
-  from: utcDateTime;
-  to: utcDateTime;
+model EventTypeDetails extends PublicEventType {
+  owner: PublicOwnerProfile;
 }
 
 model UpcomingBookingsQuery {
@@ -128,15 +132,25 @@ interface OwnerApi {
 interface PublicApi {
   @doc("Returns public booking options that a guest can choose from.")
   @get
+  @route("/profile")
+  getPublicProfile(): PublicOwnerProfile;
+
+  @doc("Returns public booking options that a guest can choose from.")
+  @get
   @route("/event-types")
   listPublicEventTypes(): PublicEventType[];
 
-  @doc("Returns slots for an event type with availability status.")
+  @doc("Returns one public event type together with host details for the booking screen.")
+  @get
+  @route("/event-types/{eventTypeId}")
+  getPublicEventType(@path eventTypeId: string): EventTypeDetails | EventTypeNotFoundError;
+
+  @doc("Returns slots for an event type with availability status for the default 14-day booking window starting from the current date.")
   @get
   @route("/event-types/{eventTypeId}/slots")
-  listSlots(@path eventTypeId: string, @query query: ListSlotsQuery): Slot[] | EventTypeNotFoundError;
+  listSlots(@path eventTypeId: string): Slot[] | EventTypeNotFoundError;
 
-  @doc("Creates a booking for a selected slot if the time is still free.")
+  @doc("Creates a booking for a selected slot if the time is still free and belongs to the default 14-day booking window.")
   @post
   @route("/bookings")
   createBooking(

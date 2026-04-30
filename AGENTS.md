@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## Контекст
-- Бизнес-контекст проекта зафиксирован в `./.prompt/prompt.txt`; опирайся на него, если меняешь контракт или поведение API.
+- Бизнес-контекст проекта зафиксирован в `./.prompt/prompt_step_1_main.txt`; опирайся на него, если меняешь контракт или поведение API.
 - Репозиторий сейчас содержит минимальный FastAPI-сервис и отдельный TypeSpec-контракт для API календарного бронирования.
 
 ## Подход
@@ -29,17 +29,18 @@
 - Запустить сервер локально: `make run`
 - Быстрая проверка импорта приложения: `make check-import`
 - Сгенерировать OpenAPI из TypeSpec: `make tsp-compile`
+- Установить TypeSpec-зависимости: `make tsp-install`
 - Установить frontend-зависимости: `make frontend-install`
 - Запустить frontend локально: `make frontend-dev`
 - Собрать frontend: `make frontend-build`
-- Низкоуровневые команды под `make`: `uv sync`, `uv run uvicorn main:app --reload`, `uv run python -c "import main; print(main.app)"`, в `typespec/` выполнить `tsp compile .`, `npm --prefix frontend install`, `npm --prefix frontend run dev`, `npm --prefix frontend run build`
+- Низкоуровневые команды под `make`: `uv sync`, `uv run uvicorn main:app --reload`, `uv run python -c "import main; print(main.app)"`, `npm --prefix typespec install`, `npm --prefix typespec run compile`, `npm --prefix frontend install`, `npm --prefix frontend run dev`, `npm --prefix frontend run build`
 
 ## TypeSpec
 - Контракт API лежит в `typespec/` и описывает домен calendar booking отдельно от текущей FastAPI-реализации.
 - Основной файл контракта: `typespec/main.tsp`; конфиг эмиттера: `typespec/tspconfig.yaml`.
 - Итоговый файл по конфигу: `typespec/calendar-booking.openapi.yaml`.
-- Не предполагай, что TypeSpec CLI уже установлен: в репозитории он не зафиксирован локальным package manager'ом.
-- Проверяй, что спецификация покрывает owner- и public-сценарии из `./.prompt/prompt.txt`, включая правило занятости слота.
+- TypeSpec toolchain зафиксирован локально в `typespec/package.json`; перед первой компиляцией установи зависимости через `make tsp-install`.
+- Проверяй, что спецификация покрывает owner- и public-сценарии из `./.prompt/prompt_step_1_main.txt`, включая правило занятости слота и 14-дневное окно записи.
 
 ## Проверки и CI
 - В репозитории пока нет локально настроенных `pytest`, `ruff`, `mypy` или `pre-commit`; не придумывай команды `lint`, `test` или `typecheck`, если пользователь явно не попросил их добавить.

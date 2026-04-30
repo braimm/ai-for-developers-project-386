@@ -1,0 +1,401 @@
+openapi: 3.0.0
+info:
+  title: Calendar Booking API
+  version: 0.0.0
+tags: []
+paths:
+  /owner/bookings:
+    get:
+      operationId: OwnerApi_listUpcomingBookings
+      description: Returns all upcoming bookings across every event type.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UpcomingBookingsQuery'
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+  /owner/event-types:
+    get:
+      operationId: OwnerApi_listEventTypes
+      description: Returns all event types available for booking.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventType'
+    post:
+      operationId: OwnerApi_createEventType
+      description: Creates a new event type.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedEventType'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventTypeRequest'
+  /owner/profile:
+    get:
+      operationId: OwnerApi_getProfile
+      description: Returns the predefined owner profile.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerProfile'
+  /public/bookings:
+    post:
+      operationId: PublicApi_createBooking
+      description: Creates a booking for a selected slot if the time is still free and belongs to the default 14-day booking window.
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedBooking'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeNotFoundError'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotAlreadyBookedError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+  /public/event-types:
+    get:
+      operationId: PublicApi_listPublicEventTypes
+      description: Returns public booking options that a guest can choose from.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicEventType'
+  /public/event-types/{eventTypeId}:
+    get:
+      operationId: PublicApi_getPublicEventType
+      description: Returns one public event type together with host details for the booking screen.
+      parameters:
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeDetails'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeNotFoundError'
+  /public/event-types/{eventTypeId}/slots:
+    get:
+      operationId: PublicApi_listSlots
+      description: Returns slots for an event type with availability status for the default 14-day booking window starting from the current date.
+      parameters:
+        - name: eventTypeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeNotFoundError'
+  /public/profile:
+    get:
+      operationId: PublicApi_getPublicProfile
+      description: Returns public booking options that a guest can choose from.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicOwnerProfile'
+components:
+  schemas:
+    Booking:
+      type: object
+      required:
+        - id
+        - eventTypeId
+        - startsAt
+        - endsAt
+        - guestName
+        - guestEmail
+        - createdAt
+        - status
+      properties:
+        id:
+          type: string
+        eventTypeId:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - confirmed
+    CreateBookingRequest:
+      type: object
+      required:
+        - eventTypeId
+        - startsAt
+        - guestName
+        - guestEmail
+      properties:
+        eventTypeId:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        notes:
+          type: string
+    CreateEventTypeRequest:
+      type: object
+      required:
+        - id
+        - title
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+    CreatedBooking:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Booking'
+    CreatedEventType:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/EventType'
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    EventType:
+      type: object
+      required:
+        - id
+        - title
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+    EventTypeDetails:
+      type: object
+      required:
+        - owner
+      properties:
+        owner:
+          $ref: '#/components/schemas/PublicOwnerProfile'
+      allOf:
+        - $ref: '#/components/schemas/PublicEventType'
+    EventTypeNotFoundError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - event_type_not_found
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    OwnerProfile:
+      type: object
+      required:
+        - id
+        - displayName
+      properties:
+        id:
+          type: string
+          enum:
+            - owner
+        displayName:
+          type: string
+    PublicEventType:
+      type: object
+      required:
+        - id
+        - title
+        - durationMinutes
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        durationMinutes:
+          type: integer
+          format: int32
+    PublicOwnerProfile:
+      type: object
+      required:
+        - displayName
+        - role
+      properties:
+        displayName:
+          type: string
+        role:
+          type: string
+          enum:
+            - Host
+    Slot:
+      type: object
+      required:
+        - eventTypeId
+        - startsAt
+        - endsAt
+        - available
+      properties:
+        eventTypeId:
+          type: string
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        available:
+          type: boolean
+    SlotAlreadyBookedError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - slot_already_booked
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+    UpcomingBookingsQuery:
+      type: object
+      properties:
+        from:
+          type: string
+          format: date-time
+    ValidationError:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - validation_error
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+servers:
+  - url: http://localhost:8000
+    description: Local development
+    variables: {}
