@@ -93,7 +93,6 @@ export function OwnerBookingsPage() {
 
             <Stack gap="xs">
               <Title order={2}>Предстоящие записи</Title>
-              <Text c="dimmed">Список строится из `GET /owner/bookings` и дополнительно связывается с названиями типов событий.</Text>
             </Stack>
 
             {bookings.length === 0 ? (

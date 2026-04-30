@@ -7,6 +7,8 @@ type Props = {
 };
 
 export function HostCard({ owner, subtitle }: Props) {
+  const roleLabel = owner.role === 'Host' ? 'Владелец календаря' : owner.role;
+
   return (
     <Card withBorder radius="xl" padding="xl" shadow="sm">
       <Group align="flex-start" gap="md">
@@ -15,7 +17,7 @@ export function HostCard({ owner, subtitle }: Props) {
         </Avatar>
         <Stack gap={4}>
           <Title order={3}>{owner.displayName}</Title>
-          <Text c="dimmed">{owner.role}</Text>
+          <Text c="dimmed">{roleLabel}</Text>
           {subtitle ? <Text c="dimmed">{subtitle}</Text> : null}
         </Stack>
       </Group>

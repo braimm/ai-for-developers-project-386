@@ -2,7 +2,6 @@ import { Alert, Container, Grid, Loader, SimpleGrid, Stack, Text, Title } from '
 import { useEffect, useState } from 'react';
 import { getPublicEventTypes, getPublicProfile } from '../api/public';
 import { EventTypeCard } from '../components/public/EventTypeCard';
-import { HostCard } from '../components/public/HostCard';
 import type { ApiError, PublicEventType, PublicOwnerProfile } from '../types/api';
 
 export function PublicCatalogPage() {
@@ -63,12 +62,6 @@ export function PublicCatalogPage() {
 
         {!loading && !error && owner ? (
           <Grid gutter="xl">
-            <Grid.Col span={12}>
-              <HostCard
-                owner={owner}
-                subtitle="Нажмите на карточку, чтобы открыть календарь и выбрать удобный слот"
-              />
-            </Grid.Col>
             <Grid.Col span={12}>
               <Stack gap="xs">
                 <Title order={1}>Выберите тип события</Title>
