@@ -15,7 +15,7 @@ import type {
   Slot,
 } from '../types/api';
 
-const useMocks = import.meta.env.VITE_USE_MOCKS !== 'false';
+const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
 
 export function getPublicProfile() {
   if (useMocks) {
